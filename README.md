@@ -25,10 +25,27 @@ Our work could make it possible for researchers to conduct more reliable, larger
 
 The successful outcome of this competition can also have significant implications for children and youth, especially those with mood and behavior difficulties. Sleep is crucial in regulating mood, emotions, and behavior in individuals of all ages, particularly children. By accurately detecting periods of sleep and wakefulness from wrist-worn accelerometer data, researchers can gain a deeper understanding of sleep patterns and better understand disturbances in children.
 
-## Context
-The “Zzzs” you catch each night are crucial for your overall health. Sleep affects everything from your development to cognitive functioning. Even so, research into sleep has proved challenging, due to the lack of naturalistic data capture alongside accurate annotation. If data science could help researchers better analyze wrist-worn accelerometer data for sleep monitoring, sleep experts could more easily conduct large-scale studies of sleep, thus improving the understanding of sleep's importance and function.
+____________________________________________________________________
+# Dataset:
+Dataset provided comprises of two files, one includes 277 unique time series of multiple nights. This is actually the sesor reading(accelerometer) contains one column 'anglez' which is the angle of motion and another is Enmo which is eucleadian normalized distance between two readings. each recorded timestep is 5 seconds apart. Another file is the events csv which provides step numbers and timestamps of monitored data when the subject onset(go to sleep) and when the subject wakesup. There are some recorded steps in which the device was not worn so we need to delete those steps.
+____________________________________________________________________
+# Observations:
 
-Current approaches for annotating sleep data include sleep logs, which are the gold standard for detecting the onset of sleep. However, they are impractical for many participants to use reliably, and fail to capture the nuanced difference between heading to bed and falling asleep (or, conversely, waking up and getting out of bed). Heuristic-based software is another solution that attempts to identify sleep windows, though these rely on human-engineered features of sleep (i.e. arm angle) that vary across individuals and don’t accurately summarize the sleep windows that experts can visually detect from their data. With improved tools to analyze sleep data on a large scale, researchers can explore the relationship between sleep and mood/behavioral difficulties. This knowledge can lead to more targeted interventions and treatment strategies.
-Competition host Child Mind Institute (CMI) transforms the lives of children and families struggling with mental health and learning disorders by giving them the help they need. CMI has become the leading independent nonprofit in children’s mental health by providing gold-standard evidence-based care, delivering educational resources to millions of families each year, training educators in underserved communities, and developing tomorrow’s breakthrough treatments.
-Established with a foundational grant from the Stavros Niarchos Foundation (SNF), the SNF Global Center for Child and Adolescent Mental Health at the Child Mind Institute works to accelerate global collaboration on under-researched areas of children’s mental health and expand worldwide access to culturally appropriate trainings, resources, and treatment. A major goal of the SNF Global Center is to expand innovations in clinical assessment and intervention, to include building, testing, and deploying new technologies to augment mental health care and research, including mobile apps, sensors, and analytical tools.
-Our work will improve researchers' ability to analyze accelerometer data for sleep monitoring and enable them to conduct large-scale studies of sleep. Ultimately, the work of this competition could improve awareness and guidance surrounding the importance of sleep. The valuable insights into how environmental factors impact sleep, mood, and behavior can inform the development of personalized interventions and support systems tailored to the unique needs of each child.
+1. Series is a huge dataset with 127,946,340 rows and at times is difficult to perform operations like pandas.apply or training the model due to RAM (30GB) limitations and time constraints (12hour/execution).
+2. Device is not worn includes the consecutive rows with zero enmo and anglez unchanged. There are 16,180,231 such rows.
+3. During EDA it was observed that 30 mins before and after events (onset/wakeup), enmo, anglez varries quicker and more, and after that, majority of the times it is minor. So a window 60min before and 60 min after the event provides the reasonable and relevant dataset to perform training operations.
+
+## Features Engineering:
+
+1. Since the change in enmo and anglez leads to the event so all the features shall be relevant to the change in these two.
+2. Feature 1,2: Rolling Standard Deviation (1 min window : 12 timesteps)
+3. Feature 2,3: Rolling Mean(2 min window : 24 timesteps)
+4. Clustering the enmo and anglez into 4 clusters.
+5. Windows Creation to delete all rows apart of 1hr before and after the events.
+
+_____________________________________________________________________
+# Machine Learning:
+1. Random Forest classifier is used to classify onset and wakeup states.
+2. As per the requirement if onset stays for 30 mins the status is onset, between onset events; wakeup events less that 30mins will not change the state and considered as disturbances.
+3. Sleep score is the mean classification score.
+
